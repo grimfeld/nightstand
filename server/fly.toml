@@ -1,0 +1,33 @@
+app = "nightstand"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # PocketBase needs to know its public origin to build correct links in the
+  # emails it sends (password resets, verification).
+  PB_PUBLIC_URL = "https://nightstand.fly.dev"
+
+[[mounts]]
+  source = "pb_data"
+  destination = "/pb/pb_data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # SQLite on one volume means exactly one writer. Never scale this past a
+  # single machine, and never let Fly stop it — a sleeping server makes the
+  # online-only client useless.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

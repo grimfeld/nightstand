@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# Catches what CI would catch, without cross-compiling for Android — that needs
+# an NDK and JDK 17 and takes minutes, and a hook that slow just gets bypassed.
+# Host-target `cargo check` finds Rust errors; the Android link step is CI's job.
+#
+# Enabled by `git config core.hooksPath .githooks` (see `npm run setup:hooks`).
+# Skip deliberately with `git push --no-verify`.
+
+set -uo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+run() {
+  local label="$1"; shift
+  printf '  %-13s' "$label"
+  local output
+  if output=$("$@" 2>&1); then
+    printf '\033[32mok\033[0m\n'
+    return 0
+  fi
+  printf '\033[31mfailed\033[0m\n\n%s\n\n' "$output"
+  return 1
+}
+
+printf '\n\033[1mpre-push\033[0m\n'
+start=$SECONDS
+
+run "typecheck"   npx tsc -b || exit 1
+run "web build"   npx vite build || exit 1
+run "cargo check" cargo check --manifest-path src-tauri/Cargo.toml --quiet || exit 1
+
+printf '\n  all clear in %ss\n\n' "$((SECONDS - start))"

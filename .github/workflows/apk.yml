@@ -1,0 +1,128 @@
+name: APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The client is compiled against a fixed PocketBase origin. Override by setting
+  # a repository variable of the same name.
+  VITE_PB_URL: ${{ vars.VITE_PB_URL || 'https://nightstand.fly.dev' }}
+
+jobs:
+  # Mirrors .githooks/pre-push, so a --no-verify push still gets caught.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc -b
+      - run: npx vite build
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: cargo check --manifest-path src-tauri/Cargo.toml
+
+  apk:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Tauri's Android tooling needs 17+; the repo's local machine stays on 11
+      # precisely because it never cross-compiles.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-34 build-tools;34.0.0"
+
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27c
+          local-cache: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # arm64 only. Universal builds all four ABIs and roughly quadruples
+          # the time for architectures no phone from the last decade uses.
+          targets: aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      # gen/android is generated rather than committed, so it never drifts from
+      # tauri.conf.json and there is no vendored gradle project to maintain.
+      - name: Generate the Android project
+        env:
+          NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: npx tauri android init
+
+      - name: Build APK
+        env:
+          NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: npx tauri android build --apk --target aarch64
+
+      # Signing happens here rather than through a patched build.gradle.kts:
+      # the gradle project is regenerated every run, so patching it each time is
+      # more fragile than signing the finished artifact.
+      - name: Sign
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::error::ANDROID_KEYSTORE_B64 is not set — see README, 'Signing'."
+            exit 1
+          fi
+
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/nightstand.keystore"
+
+          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          UNSIGNED="$(find src-tauri/gen/android -name '*-unsigned.apk' | head -1)"
+          echo "Signing $UNSIGNED with $BUILD_TOOLS"
+
+          "$BUILD_TOOLS/zipalign" -p -f 4 "$UNSIGNED" "$RUNNER_TEMP/aligned.apk"
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$RUNNER_TEMP/nightstand.keystore" \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass "pass:$KEYSTORE_PASSWORD" \
+            --out nightstand.apk \
+            "$RUNNER_TEMP/aligned.apk"
+
+          "$BUILD_TOOLS/apksigner" verify --print-certs nightstand.apk
+          rm -f "$RUNNER_TEMP/nightstand.keystore"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nightstand-apk-${{ github.sha }}
+          path: nightstand.apk
+          if-no-files-found: error
+          retention-days: 30
