@@ -28,8 +28,10 @@ interface SearchDoc {
 const FIELDS =
   "key,title,author_name,publisher,subject,first_publish_year,number_of_pages_median,cover_i";
 
+// default=false makes a missing cover a real 404 instead of a blank image, so
+// the <img> onError fallback actually fires.
 export const coverUrl = (id: number, size: "S" | "M" | "L" = "M") =>
-  `https://covers.openlibrary.org/b/id/${id}-${size}.jpg`;
+  `https://covers.openlibrary.org/b/id/${id}-${size}.jpg?default=false`;
 
 export async function searchWorks(query: string, signal?: AbortSignal): Promise<WorkHit[]> {
   const q = query.trim();
