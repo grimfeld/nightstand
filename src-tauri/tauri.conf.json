@@ -24,7 +24,7 @@
         "default-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: https://covers.openlibrary.org",
-        "connect-src": "'self' ipc: http://ipc.localhost https://nightstand.fly.dev https://openlibrary.org"
+        "connect-src": "'self' ipc: http://ipc.localhost https://nightstand-pb.fly.dev https://openlibrary.org"
       }
     }
   },
