@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
+import { BiometricGate } from "@/components/BiometricGate";
 import { AddBookDialog } from "@/components/AddBookDialog";
 import { Backlog } from "@/components/Backlog";
 import { Nightstand } from "@/components/Nightstand";
@@ -11,7 +12,7 @@ import { useBooks } from "@/hooks/useBooks";
 import { backlog } from "@/lib/domain";
 
 function Shell() {
-  const { books, loading, error, refresh, apply, add } = useBooks();
+  const { books, loading, error, refresh, apply, add, setPhoto } = useBooks();
   const [adding, setAdding] = useState(false);
   const [tab, setTab] = useState("nightstand");
 
@@ -43,11 +44,16 @@ function Shell() {
           </TabsList>
 
           <TabsContent value="nightstand">
-            <Nightstand books={books} onApply={apply} onFillSlot={() => setTab("backlog")} />
+            <Nightstand
+              books={books}
+              onApply={apply}
+              onPhoto={setPhoto}
+              onFillSlot={() => setTab("backlog")}
+            />
           </TabsContent>
 
           <TabsContent value="backlog">
-            <Backlog books={books} onApply={apply} />
+            <Backlog books={books} onApply={apply} onPhoto={setPhoto} />
           </TabsContent>
         </Tabs>
       )}
@@ -68,9 +74,11 @@ function Shell() {
 
 export default function App() {
   return (
-    <AuthGate>
-      <Shell />
-      <Toaster position="top-center" />
-    </AuthGate>
+    <BiometricGate>
+      <AuthGate>
+        <Shell />
+        <Toaster position="top-center" />
+      </AuthGate>
+    </BiometricGate>
   );
 }

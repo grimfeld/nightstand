@@ -2,6 +2,7 @@ import { AlertTriangle, BookOpen, Check, ShoppingCart, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookCover } from "@/components/BookCover";
+import { coverSrc } from "@/lib/pb";
 import {
   SLOT_COUNT,
   abandon,
@@ -21,10 +22,11 @@ import {
 interface Props {
   books: Book[];
   onApply: (id: string, patch: Patch) => void;
+  onPhoto: (id: string, file: File) => void;
   onFillSlot: () => void;
 }
 
-export function Nightstand({ books, onApply, onFillSlot }: Props) {
+export function Nightstand({ books, onApply, onPhoto, onFillSlot }: Props) {
   const occupied = nightstand(books);
   const free = freeSlots(books);
 
@@ -42,7 +44,7 @@ export function Nightstand({ books, onApply, onFillSlot }: Props) {
 
       <ul className="space-y-2">
         {occupied.map((book) => (
-          <SlotCard key={book.id} book={book} onApply={onApply} />
+          <SlotCard key={book.id} book={book} onApply={onApply} onPhoto={onPhoto} />
         ))}
 
         {free.map((slot) => (
@@ -67,7 +69,15 @@ export function Nightstand({ books, onApply, onFillSlot }: Props) {
   );
 }
 
-function SlotCard({ book, onApply }: { book: Book; onApply: Props["onApply"] }) {
+function SlotCard({
+  book,
+  onApply,
+  onPhoto,
+}: {
+  book: Book;
+  onApply: Props["onApply"];
+  onPhoto: Props["onPhoto"];
+}) {
   const age = slotAge(book);
   const stale = isStale(book);
   const reading = book.engagement === "READING";
@@ -75,7 +85,12 @@ function SlotCard({ book, onApply }: { book: Book; onApply: Props["onApply"] }) 
   return (
     <li className="rounded-lg border bg-card p-3">
       <div className="flex gap-3">
-        <BookCover url={book.cover_url} title={book.title} className="h-14 w-10" />
+        <BookCover
+          url={coverSrc(book)}
+          title={book.title}
+          className="h-14 w-10"
+          onPhoto={book.cover_url ? undefined : (file) => onPhoto(book.id, file)}
+        />
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm leading-tight font-medium">{book.title}</p>

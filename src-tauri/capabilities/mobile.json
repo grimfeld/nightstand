@@ -1,0 +1,7 @@
+{
+  "identifier": "mobile",
+  "description": "mobile-only permissions",
+  "platforms": ["android", "iOS"],
+  "windows": ["main"],
+  "permissions": ["biometric:default"]
+}

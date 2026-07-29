@@ -23,7 +23,7 @@
       "csp": {
         "default-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": "'self' data: https://covers.openlibrary.org",
+        "img-src": "'self' data: https://covers.openlibrary.org https://nightstand-pb.fly.dev http://127.0.0.1:8090",
         "connect-src": "'self' ipc: http://ipc.localhost https://nightstand-pb.fly.dev https://openlibrary.org"
       }
     }

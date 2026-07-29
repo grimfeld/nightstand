@@ -23,6 +23,8 @@ export interface Book {
   /** Open Library *work* key, e.g. `/works/OL27448W`. Identity for dedupe. */
   work_key: string;
   cover_url: string;
+  /** Filename of a photo taken of the physical book. Shown over `cover_url`. */
+  photo: string;
   pages: number;
   year: number;
 
@@ -47,8 +49,9 @@ export interface Book {
   finished_on: Day;
 }
 
-/** Fields the app writes. `id`/`owner` are PocketBase's business. */
-export type BookDraft = Omit<Book, "id" | "owner">;
+/** Fields the app writes. `id`/`owner` are PocketBase's business, and `photo`
+ *  is a file upload with its own code path rather than part of any draft. */
+export type BookDraft = Omit<Book, "id" | "owner" | "photo">;
 
 export const today = (): Day => new Date().toISOString().slice(0, 10);
 

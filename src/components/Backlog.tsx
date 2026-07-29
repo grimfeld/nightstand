@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BookCover } from "@/components/BookCover";
-import { backlog, freeSlots, promote, type Book, type Patch } from "@/lib/domain";
+import { backlog, finish, freeSlots, promote, type Book, type Patch } from "@/lib/domain";
+import { coverSrc } from "@/lib/pb";
 
 type Filter = "ALL" | "WANTED" | "OWNED_UNREAD" | "READ" | "STUDIED" | "ABANDONED" | "GONE";
 
@@ -40,9 +41,11 @@ const matches = (b: Book, f: Filter) => {
 export function Backlog({
   books,
   onApply,
+  onPhoto,
 }: {
   books: Book[];
   onApply: (id: string, patch: Patch) => void;
+  onPhoto: (id: string, file: File) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -92,7 +95,12 @@ export function Backlog({
       <ul className="space-y-2">
         {rows.map((book) => (
           <li key={book.id} className="flex gap-3 rounded-lg border bg-card p-3">
-            <BookCover url={book.cover_url} title={book.title} className="h-14 w-10" />
+            <BookCover
+              url={coverSrc(book)}
+              title={book.title}
+              className="h-14 w-10"
+              onPhoto={book.cover_url ? undefined : (file) => onPhoto(book.id, file)}
+            />
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm leading-tight font-medium">{book.title}</p>
@@ -109,16 +117,28 @@ export function Backlog({
               </div>
             </div>
 
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 shrink-0 self-center text-xs"
-              disabled={free.length === 0}
-              title={free.length === 0 ? "The nightstand is full" : undefined}
-              onClick={() => onApply(book.id, promote(free[0]))}
-            >
-              Slot it
-            </Button>
+            <div className="flex shrink-0 flex-col justify-center gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={free.length === 0}
+                title={free.length === 0 ? "The nightstand is full" : undefined}
+                onClick={() => onApply(book.id, promote(free[0]))}
+              >
+                Slot it
+              </Button>
+              {book.engagement !== "READ" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1 text-xs text-muted-foreground"
+                  onClick={() => onApply(book.id, finish())}
+                >
+                  <Check className="size-3" /> Read it
+                </Button>
+              )}
+            </div>
           </li>
         ))}
 

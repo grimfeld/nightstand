@@ -35,6 +35,16 @@ export async function deleteBook(id: string): Promise<void> {
   await books().delete(id);
 }
 
+export async function uploadPhoto(id: string, photo: File): Promise<Book> {
+  return toBook(await books().update(id, { photo }));
+}
+
+/** The image to show for a book: own photo first, then the Open Library cover. */
+export const coverSrc = (b: Book): string =>
+  b.photo
+    ? pb.files.getURL({ id: b.id, collectionName: "books" }, b.photo, { thumb: "200x300" })
+    : b.cover_url;
+
 /** Work-level dedupe, so "do I already own this?" survives a different edition. */
 export async function findByWorkKey(workKey: string): Promise<Book | null> {
   if (!workKey) return null;
