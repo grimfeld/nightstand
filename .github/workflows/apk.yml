@@ -102,6 +102,11 @@ jobs:
           NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
         run: npx tauri android init
 
+      # android init lays down the template's default launcher icons; stamp the
+      # real ones into the freshly generated project before building.
+      - name: Stamp app icons
+        run: npx tauri icon src-tauri/app-icon.svg
+
       - name: Build APK
         env:
           NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
