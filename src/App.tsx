@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGate } from "@/components/AuthGate";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { BiometricGate } from "@/components/BiometricGate";
 import { AddBookDialog } from "@/components/AddBookDialog";
 import { Backlog } from "@/components/Backlog";
 import { BookPage } from "@/components/BookPage";
 import { Nightstand } from "@/components/Nightstand";
 import { useBooks } from "@/hooks/useBooks";
+import { useScannerAvailable } from "@/hooks/useScannerAvailable";
 import { backlog } from "@/lib/domain";
+import { cn } from "@/lib/utils";
 
 function Shell() {
   const { books, loading, error, refresh, apply, add, remove, setPhoto } = useBooks();
@@ -21,8 +24,36 @@ function Shell() {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = books.find((b) => b.id === openId);
 
+  // Scanning swaps the whole UI for the camera viewfinder: the preview sits
+  // behind the webview, so nothing opaque may stay on screen.
+  const scannerAvailable = useScannerAvailable();
+  const [scanning, setScanning] = useState(false);
+  const [scanQuery, setScanQuery] = useState("");
+
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24">
+    <>
+    {scanning && (
+      <BarcodeScanner
+        onScan={(isbn) => {
+          setScanning(false);
+          setScanQuery(`isbn:${isbn}`);
+          setAdding(true);
+        }}
+        onCancel={() => {
+          setScanning(false);
+          setAdding(true);
+        }}
+      />
+    )}
+
+    {/* display:none rather than unmount: books, tab, and page state survive
+        the trip through the scanner. */}
+    <div
+      className={cn(
+        "mx-auto min-h-dvh w-full max-w-lg px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24",
+        scanning && "hidden",
+      )}
+    >
       <header className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Nightstand</h1>
         <Button variant="ghost" size="icon" onClick={() => void refresh()} aria-label="Refresh">
@@ -83,8 +114,26 @@ function Shell() {
         </Button>
       )}
 
-      <AddBookDialog open={adding} onOpenChange={setAdding} existing={books} onAdd={add} />
+      <AddBookDialog
+        open={adding}
+        onOpenChange={(o) => {
+          setAdding(o);
+          if (!o) setScanQuery("");
+        }}
+        existing={books}
+        onAdd={add}
+        initialQuery={scanQuery}
+        onScanRequest={
+          scannerAvailable
+            ? () => {
+                setAdding(false);
+                setScanning(true);
+              }
+            : undefined
+        }
+      />
     </div>
+    </>
   );
 }
 

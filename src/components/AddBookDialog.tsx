@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ScanBarcode } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +28,20 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   existing: Book[];
   onAdd: (draft: BookDraft) => Promise<Book | null>;
+  /** Pre-filled search, e.g. `isbn:9780…` after a barcode scan. */
+  initialQuery?: string;
+  /** When set, a scan button appears beside the search box (mobile only). */
+  onScanRequest?: () => void;
 }
 
-export function AddBookDialog({ open, onOpenChange, existing, onAdd }: Props) {
+export function AddBookDialog({
+  open,
+  onOpenChange,
+  existing,
+  onAdd,
+  initialQuery,
+  onScanRequest,
+}: Props) {
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<WorkHit[]>([]);
   const [searching, setSearching] = useState(false);
@@ -51,6 +62,10 @@ export function AddBookDialog({ open, onOpenChange, existing, onAdd }: Props) {
   useEffect(() => {
     if (!open) reset();
   }, [open]);
+
+  useEffect(() => {
+    if (open && initialQuery) setQuery(initialQuery);
+  }, [open, initialQuery]);
 
   // Debounced search. Aborting in the cleanup means the last keystroke wins even
   // when an earlier request is slower to come back.
@@ -135,15 +150,27 @@ export function AddBookDialog({ open, onOpenChange, existing, onAdd }: Props) {
 
         {!picked ? (
           <div className="space-y-3">
-            <div className="relative">
-              <Input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Seeing like a state…"
-              />
-              {searching && (
-                <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Seeing like a state…"
+                />
+                {searching && (
+                  <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                )}
+              </div>
+              {onScanRequest && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onScanRequest}
+                  aria-label="Scan the barcode"
+                >
+                  <ScanBarcode className="size-4" />
+                </Button>
               )}
             </div>
 

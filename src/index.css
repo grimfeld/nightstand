@@ -85,3 +85,11 @@
     overscroll-behavior: none;
   }
 }
+
+/* While the barcode scanner runs, the camera preview sits behind the webview:
+   every layer above it must go transparent or the camera is invisible. */
+html.scanning,
+html.scanning body,
+html.scanning #root {
+  background: transparent !important;
+}

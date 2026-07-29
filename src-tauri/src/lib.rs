@@ -2,10 +2,13 @@
 pub fn run() {
   let builder = tauri::Builder::default();
 
-  // Biometric prompts only exist on mobile. The desktop build never registers
-  // the plugin, and the client treats its absence as "nothing to unlock".
+  // Biometric prompts and camera scanning only exist on mobile. The desktop
+  // build never registers these plugins, and the client treats their absence
+  // as "nothing to unlock" / "no scanner".
   #[cfg(mobile)]
-  let builder = builder.plugin(tauri_plugin_biometric::init());
+  let builder = builder
+    .plugin(tauri_plugin_biometric::init())
+    .plugin(tauri_plugin_barcode_scanner::init());
 
   builder
     .setup(|app| {

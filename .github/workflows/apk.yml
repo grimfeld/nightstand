@@ -2,7 +2,8 @@ name: APK
 
 on:
   push:
-    branches: [main]
+    # isbn-scanner builds its own APK artifact while the feature bakes.
+    branches: [main, isbn-scanner]
     tags: ["v*"]
   workflow_dispatch:
 
