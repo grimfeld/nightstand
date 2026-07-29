@@ -3,6 +3,7 @@ name: APK
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
 
 concurrency:
@@ -52,6 +53,10 @@ jobs:
   apk:
     needs: check
     runs-on: ubuntu-latest
+    # contents: write is only needed by the release step; the default token is
+    # read-only in this repo.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -143,3 +148,14 @@ jobs:
           path: nightstand.apk
           if-no-files-found: error
           retention-days: 30
+
+      # Tag pushes additionally publish a Release, which is where end users
+      # download the APK — artifacts expire and sit behind a login.
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" nightstand.apk \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
