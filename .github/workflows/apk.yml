@@ -12,7 +12,7 @@ concurrency:
 env:
   # The client is compiled against a fixed PocketBase origin. Override by setting
   # a repository variable of the same name.
-  VITE_PB_URL: ${{ vars.VITE_PB_URL || 'https://nightstand.fly.dev' }}
+  VITE_PB_URL: ${{ vars.VITE_PB_URL || 'https://nightstand-pb.fly.dev' }}
 
 jobs:
   # Mirrors .githooks/pre-push, so a --no-verify push still gets caught.
