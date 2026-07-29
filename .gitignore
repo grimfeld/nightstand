@@ -31,8 +31,12 @@ dist-ssr
 src-tauri/target
 src-tauri/gen
 
-# pocketbase local data
+# pocketbase local data + downloaded binary
 server/pb_data
+server/pocketbase.exe
+server/pocketbase
+server/CHANGELOG.md
+server/LICENSE.md
 
 # signing
 *.keystore
