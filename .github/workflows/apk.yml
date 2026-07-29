@@ -165,3 +165,20 @@ jobs:
           gh release create "$GITHUB_REF_NAME" nightstand.apk \
             --title "$GITHUB_REF_NAME" \
             --generate-notes
+
+      # The branch gets a rolling prerelease: artifacts are invisible from the
+      # GitHub mobile app, a Release is not. The tag is left wherever it was
+      # first created — only the attached APK matters here.
+      - name: Publish test prerelease
+        if: github.ref == 'refs/heads/isbn-scanner'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view isbn-scanner-test > /dev/null 2>&1; then
+            gh release upload isbn-scanner-test nightstand.apk --clobber
+          else
+            gh release create isbn-scanner-test nightstand.apk \
+              --prerelease \
+              --title "ISBN scanner (test build)" \
+              --notes "Signed test APK from the isbn-scanner branch, refreshed on every push."
+          fi
