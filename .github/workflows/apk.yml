@@ -71,11 +71,12 @@ jobs:
         with:
           packages: "platform-tools platforms;android-34 build-tools;34.0.0"
 
+      # local-cache deliberately off: setup-ndk's cache drops symlinks inside
+      # the NDK toolchain, leaving clang wrappers pointing at a missing binary.
       - uses: nttld/setup-ndk@v1
         id: ndk
         with:
           ndk-version: r27c
-          local-cache: true
 
       - uses: dtolnay/rust-toolchain@stable
         with:
