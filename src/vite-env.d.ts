@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Base URL of the PocketBase instance, e.g. https://nightstand.fly.dev */
+  /** Base URL of the PocketBase instance, e.g. https://nightstand-pb.fly.dev */
   readonly VITE_PB_URL: string;
 }
 

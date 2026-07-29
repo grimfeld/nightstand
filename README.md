@@ -47,7 +47,7 @@ fly volumes create pb_data --size 1 --region lhr
 fly deploy
 ```
 
-Then create your account at `https://nightstand.fly.dev/_/` — one superuser for
+Then create your account at `https://nightstand-pb.fly.dev/_/` — one superuser for
 the admin UI, and one record in `users` that owns every book. Collection rules
 scope everything to `owner = @request.auth.id`.
 
@@ -83,7 +83,7 @@ Set three repository secrets:
 | `ANDROID_KEY_ALIAS` | `nightstand` |
 
 Optionally set a repository **variable** `VITE_PB_URL` if your PocketBase is not
-at `https://nightstand.fly.dev`.
+at `https://nightstand-pb.fly.dev`.
 
 ### Building locally
 
