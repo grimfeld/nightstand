@@ -42,10 +42,12 @@ export function Backlog({
   books,
   onApply,
   onPhoto,
+  onOpen,
 }: {
   books: Book[];
   onApply: (id: string, patch: Patch) => void;
   onPhoto: (id: string, file: File) => void;
+  onOpen: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -59,6 +61,7 @@ export function Backlog({
         !q ||
         b.title.toLowerCase().includes(q) ||
         b.author.toLowerCase().includes(q) ||
+        b.genre.toLowerCase().includes(q) ||
         b.reason.toLowerCase().includes(q),
       )
       .sort((a, b) => a.title.localeCompare(b.title));
@@ -102,7 +105,11 @@ export function Backlog({
               onPhoto={book.cover_url ? undefined : (file) => onPhoto(book.id, file)}
             />
 
-            <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => onOpen(book.id)}
+              className="min-w-0 flex-1 text-left"
+            >
               <p className="truncate text-sm leading-tight font-medium">{book.title}</p>
               <p className="truncate text-xs text-muted-foreground">{book.author}</p>
               {book.reason && (
@@ -115,7 +122,7 @@ export function Backlog({
                 <Badge variant="outline" className="text-[10px]">{book.engagement}</Badge>
                 {book.studied && <Badge className="text-[10px]">studied</Badge>}
               </div>
-            </div>
+            </button>
 
             <div className="flex shrink-0 flex-col justify-center gap-1.5">
               <Button

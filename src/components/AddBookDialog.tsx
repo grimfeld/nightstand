@@ -96,6 +96,8 @@ export function AddBookDialog({ open, onOpenChange, existing, onAdd }: Props) {
     const draft: BookDraft = {
       title: picked.title,
       author: picked.author,
+      publisher: picked.publisher,
+      genre: picked.genre,
       work_key: picked.work_key,
       cover_url: picked.cover_url,
       pages: picked.pages,

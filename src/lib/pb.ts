@@ -16,7 +16,10 @@ pb.autoCancellation(false);
 
 const books = () => pb.collection("books");
 
-const toBook = (r: RecordModel): Book => r as unknown as Book;
+// The defaults cover a client running ahead of the server's migrations: a
+// record from an old schema simply lacks the newer keys.
+const toBook = (r: RecordModel): Book =>
+  ({ photo: "", publisher: "", genre: "", ...r }) as unknown as Book;
 
 export async function listBooks(): Promise<Book[]> {
   const records = await books().getFullList({ sort: "slot,title" });

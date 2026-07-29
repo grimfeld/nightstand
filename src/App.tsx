@@ -7,14 +7,19 @@ import { AuthGate } from "@/components/AuthGate";
 import { BiometricGate } from "@/components/BiometricGate";
 import { AddBookDialog } from "@/components/AddBookDialog";
 import { Backlog } from "@/components/Backlog";
+import { BookPage } from "@/components/BookPage";
 import { Nightstand } from "@/components/Nightstand";
 import { useBooks } from "@/hooks/useBooks";
 import { backlog } from "@/lib/domain";
 
 function Shell() {
-  const { books, loading, error, refresh, apply, add, setPhoto } = useBooks();
+  const { books, loading, error, refresh, apply, add, remove, setPhoto } = useBooks();
   const [adding, setAdding] = useState(false);
   const [tab, setTab] = useState("nightstand");
+
+  // Navigation is one book deep, so a nullable id is the whole router.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = books.find((b) => b.id === openId);
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24">
@@ -36,6 +41,14 @@ function Shell() {
         <div className="grid place-items-center py-24">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
+      ) : open ? (
+        <BookPage
+          book={open}
+          onApply={apply}
+          onPhoto={setPhoto}
+          onDelete={remove}
+          onBack={() => setOpenId(null)}
+        />
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 grid w-full grid-cols-2">
@@ -48,24 +61,27 @@ function Shell() {
               books={books}
               onApply={apply}
               onPhoto={setPhoto}
+              onOpen={setOpenId}
               onFillSlot={() => setTab("backlog")}
             />
           </TabsContent>
 
           <TabsContent value="backlog">
-            <Backlog books={books} onApply={apply} onPhoto={setPhoto} />
+            <Backlog books={books} onApply={apply} onPhoto={setPhoto} onOpen={setOpenId} />
           </TabsContent>
         </Tabs>
       )}
 
-      <Button
-        size="lg"
-        onClick={() => setAdding(true)}
-        className="fixed right-[max(1rem,calc(50%-15rem))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] size-14 rounded-full shadow-lg"
-        aria-label="Add a book"
-      >
-        <Plus className="size-6" />
-      </Button>
+      {!open && (
+        <Button
+          size="lg"
+          onClick={() => setAdding(true)}
+          className="fixed right-[max(1rem,calc(50%-15rem))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] size-14 rounded-full shadow-lg"
+          aria-label="Add a book"
+        >
+          <Plus className="size-6" />
+        </Button>
+      )}
 
       <AddBookDialog open={adding} onOpenChange={setAdding} existing={books} onAdd={add} />
     </div>

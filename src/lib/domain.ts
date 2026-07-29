@@ -20,6 +20,9 @@ export interface Book {
   owner: string;
   title: string;
   author: string;
+  publisher: string;
+  /** Free text, e.g. "Politics, History". Cosmetic — never drives behaviour. */
+  genre: string;
   /** Open Library *work* key, e.g. `/works/OL27448W`. Identity for dedupe. */
   work_key: string;
   cover_url: string;

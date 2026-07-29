@@ -23,10 +23,11 @@ interface Props {
   books: Book[];
   onApply: (id: string, patch: Patch) => void;
   onPhoto: (id: string, file: File) => void;
+  onOpen: (id: string) => void;
   onFillSlot: () => void;
 }
 
-export function Nightstand({ books, onApply, onPhoto, onFillSlot }: Props) {
+export function Nightstand({ books, onApply, onPhoto, onOpen, onFillSlot }: Props) {
   const occupied = nightstand(books);
   const free = freeSlots(books);
 
@@ -44,7 +45,7 @@ export function Nightstand({ books, onApply, onPhoto, onFillSlot }: Props) {
 
       <ul className="space-y-2">
         {occupied.map((book) => (
-          <SlotCard key={book.id} book={book} onApply={onApply} onPhoto={onPhoto} />
+          <SlotCard key={book.id} book={book} onApply={onApply} onPhoto={onPhoto} onOpen={onOpen} />
         ))}
 
         {free.map((slot) => (
@@ -73,10 +74,12 @@ function SlotCard({
   book,
   onApply,
   onPhoto,
+  onOpen,
 }: {
   book: Book;
   onApply: Props["onApply"];
   onPhoto: Props["onPhoto"];
+  onOpen: Props["onOpen"];
 }) {
   const age = slotAge(book);
   const stale = isStale(book);
@@ -92,7 +95,11 @@ function SlotCard({
           onPhoto={book.cover_url ? undefined : (file) => onPhoto(book.id, file)}
         />
 
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => onOpen(book.id)}
+          className="min-w-0 flex-1 text-left"
+        >
           <p className="truncate text-sm leading-tight font-medium">{book.title}</p>
           <p className="truncate text-xs text-muted-foreground">{book.author}</p>
 
@@ -121,7 +128,7 @@ function SlotCard({
               </span>
             )}
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="mt-2.5 flex flex-wrap gap-1.5">
