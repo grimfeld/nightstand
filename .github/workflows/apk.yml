@@ -14,6 +14,9 @@ env:
   # The client is compiled against a fixed PocketBase origin. Override by setting
   # a repository variable of the same name.
   VITE_PB_URL: ${{ vars.VITE_PB_URL || 'https://nightstand-pb.fly.dev' }}
+  # Optional Google Books API key; without one, anonymous quota applies and the
+  # client quietly falls back to Open Library alone.
+  VITE_GBOOKS_KEY: ${{ secrets.VITE_GBOOKS_KEY || '' }}
 
 jobs:
   # Mirrors .githooks/pre-push, so a --no-verify push still gets caught.

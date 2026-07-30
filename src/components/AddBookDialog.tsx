@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BookCover } from "@/components/BookCover";
-import { searchWorks, type WorkHit } from "@/lib/openlibrary";
+import { searchBooks, type WorkHit } from "@/lib/booksearch";
 import { ACQUISITION, today, type Acquisition, type Book, type BookDraft } from "@/lib/domain";
 
 interface Props {
@@ -78,7 +78,7 @@ export function AddBookDialog({
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        setHits(await searchWorks(query, controller.signal));
+        setHits(await searchBooks(query, controller.signal));
       } catch (e) {
         if (!controller.signal.aborted) {
           toast.error(e instanceof Error ? e.message : "Open Library lookup failed");
