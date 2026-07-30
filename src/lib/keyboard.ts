@@ -5,19 +5,31 @@
  *
  * Self-correcting across soft-input modes: when the webview itself resizes
  * with the keyboard (adjustResize), innerHeight and the visual viewport shrink
- * together and the inset stays 0 — dvh units already did the work. When it
- * does not (adjustPan), the difference is the keyboard's true height.
+ * together and the inset stays 0. When it does not, the difference is the
+ * keyboard's true height.
  */
 export function trackKeyboardInset() {
   const vv = window.visualViewport;
   if (!vv) return;
 
-  const update = () => {
-    const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    document.documentElement.style.setProperty("--keyboard-inset", `${Math.round(inset)}px`);
+  let raf = 0;
+
+  const apply = () => {
+    raf = 0;
+    const overlap = window.innerHeight - vv.height - vv.offsetTop;
+    // Anything toolbar-sized is browser chrome noise, not a keyboard; snapping
+    // the dialog around for it is what makes the UI feel jumpy.
+    const inset = overlap > 48 ? Math.round(overlap) : 0;
+    document.documentElement.style.setProperty("--keyboard-inset", `${inset}px`);
   };
 
-  vv.addEventListener("resize", update);
-  vv.addEventListener("scroll", update);
-  update();
+  // Coalesce the event bursts a keyboard animation fires into one write per
+  // frame; the CSS transition on the dialog smooths over the rest.
+  const schedule = () => {
+    if (!raf) raf = requestAnimationFrame(apply);
+  };
+
+  vv.addEventListener("resize", schedule);
+  vv.addEventListener("scroll", schedule);
+  apply();
 }

@@ -49,6 +49,7 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  style,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -61,16 +62,22 @@ function DialogContent({
         className={cn(
           // Bottom sheet riding the virtual keyboard: --keyboard-inset (kept
           // up to date from the visualViewport API, see lib/keyboard.ts) is
-          // the keyboard's overlap, so the dialog always sits just above it —
-          // and at the screen bottom, thumb reach, when there is none. The
-          // height cap subtracts both the inset and dvh handles the
-          // adjustResize case, so neither mode lets it grow under the
-          // keyboard or the status bar. Grid children get min-w-0 (their
-          // default min-content width is what lets long text push the dialog
-          // wider than the screen) and text wraps anywhere as a last resort.
-          "fixed bottom-[calc(1rem+var(--keyboard-inset,0px))] left-[50%] z-50 grid max-h-[calc(100dvh-var(--keyboard-inset,0px)-max(3rem,env(safe-area-inset-top))-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] gap-4 overflow-x-hidden overflow-y-auto rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none *:min-w-0 wrap-anywhere data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 sm:max-w-lg",
+          // the keyboard's overlap, so the dialog sits just above it — and at
+          // the screen bottom, thumb reach, when there is none. Position and
+          // height cap live in the style attribute below, in deliberately
+          // boring CSS (vh, two-term calc) that any webview gets right; the
+          // transition smooths the keyboard riding. Grid children get min-w-0
+          // (their default min-content width is what lets long text push the
+          // dialog wider than the screen) and text wraps anywhere as a last
+          // resort.
+          "fixed left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] gap-4 overflow-x-hidden overflow-y-auto rounded-lg border bg-background p-6 shadow-lg transition-[bottom,max-height] duration-200 ease-out outline-none *:min-w-0 wrap-anywhere data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 sm:max-w-lg",
           className
         )}
+        style={{
+          bottom: "calc(1rem + var(--keyboard-inset, 0px))",
+          maxHeight: "calc(100vh - var(--keyboard-inset, 0px) - 5rem)",
+          ...style,
+        }}
         {...props}
       >
         {children}
